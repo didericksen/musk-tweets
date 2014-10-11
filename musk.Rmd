@@ -53,13 +53,13 @@ It would make sense that investing in him would yield high returns. The only pro
 - CEO of Tesla Motors
 - CEO of SpaceX
 - Chairman of SolarCity
-- Invester in AI companies
+- Investor in Artificial Intelligence companies
 - And in his spare time, designer of a high-speed transportation system ("Hyperloop")
 
 He is a self-described workaholic and has said that some weeks he puts in 100 hours, but that still would not be enough to run three companies with market capitalizations in the billions. So which company (or companies) receives more of his time and energy? To answer this question I decided to look at his active twitter account to do an analysis on the content of his tweets over time.
 
 ### Charting the Data
-To get the data I used the Twitter API (using Dev credentials) and the python script [tweet_dumper.py](https://gist.github.com/yanofsky/5436496) to pull all of Elon's tweets. I only used tweets and retweets (no replies or favorites). I then categorized them into "Tesla", "SpaceX", "SolarCity", and "Other". Most of his tweets and retweets are directly related to one of his three companies. Of the "Other" tweets, most are about climate change (which incidentally is a driving influence for his involvement in all three companies). To create the charts I used R with the following packages: rCharts, ggplot2, dplyr, lubridate, scales, and zoo. My R code can be found [here]().
+To get the data I used the Twitter API (using Dev credentials) and the python script [tweet_dumper.py](https://gist.github.com/yanofsky/5436496) to pull all of Elon's tweets. I only used tweets and retweets (no replies or favorites). I then categorized them into "Tesla", "SpaceX", "SolarCity", and "Other". Most of his tweets and retweets are directly related to one of his three companies. Of the "Other" tweets, most are about climate change (which incidentally is a driving influence for his involvement in all three companies). To create the charts I used R with the following packages: rCharts, ggplot2, dplyr, lubridate, scales, and zoo. My R code can be found [here](https://github.com/didericksen/musk-tweets/blob/gh-pages/musk.Rmd).
 
 The chart created above is completely interactive. You can switch the bars on the chart from being stacked to being grouped. Click on a legend item to hide that particular grouping. Double-click on a legend item to select only that grouping. Mouseover one of the bars to get its count.
 
