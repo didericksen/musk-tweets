@@ -1,0 +1,80 @@
+## Analysis of Elon Musk's Tweets
+#### By [Devin Didericksen](http://linkedin.com/in/didericksen) on October 11, 2014
+
+```{r prep, echo = FALSE, results = 'hide', warning = FALSE, message = FALSE}
+library(dplyr)
+library(rCharts)
+library(ggplot2)
+library(lubridate)
+library(scales)
+library(zoo)
+#import data
+setwd("/home/devin/R/data")
+tweets <- read.csv("musk.csv", header = TRUE)
+tweets <- tweets[tweets$reply == FALSE,c(-1,-5)]
+tweets <- tweets[-dim(tweets)[1],]
+tweets$text <- as.character(tweets$text)
+tweets$created_at <- as.Date(tweets$created_at,format="%m/%d/%Y")
+tweets$topic <- as.character(tweets$topic)
+tweets$topic[tweets$topic == "t"] <- "Tesla"
+tweets$topic[tweets$topic == "x"] <- "SpaceX"
+tweets$topic[tweets$topic == "s"] <- "SolarCity"
+tweets$topic[tweets$topic == ""] <- "Other"
+tweets$topic <- factor(tweets$topic, levels = c("Tesla","SpaceX","SolarCity","Other"))
+tweets$month <- floor_date(tweets$created_at, "month")
+tweets2 <- summarise(group_by(tweets, month, topic),count=n())
+#A ggplot2 chart by month - replaced by quarterly chart
+#ggplot(tweets2, aes(x = month, y = count, fill = topic)) + stat_summary(fun.y = identity, geom = "bar", position = "stack") + scale_fill_brewer(palette = "Set1") + scale_x_date(breaks = "1 months", labels = date_format("%b-%y"), limits = as.Date(c("2012-01-01","2014-08-01"))) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + ggtitle("Tweets by Elon Musk (Monthly)")
+tweets$quarter <- as.Date(as.yearqtr(tweets$created_at))
+month(tweets$quarter) <- month(tweets$quarter) + 2
+tweets3 <- summarise(group_by(tweets, quarter, topic),count=n())
+tweets3 <- tweets3[tweets3$quarter > as.Date("2012-01-01"),]
+#NVD3 does not like holes in data so we need to fill in the holes with NA's
+dummy1 <- expand.grid(topic = levels(tweets3$topic), quarter = levels(as.factor(tweets3$quarter)))
+dummy1$quarter <- as.Date(dummy1$quarter,format="%Y-%m-%d")
+tweets4 <- left_join(dummy1,tweets3)
+tweets4$quarter <- as.factor(c(rep("Q1 2012",4),rep("Q2 2012",4),rep("Q3 2012",4),rep("Q4 2012",4),rep("Q1 2013",4),rep("Q2 2013",4),rep("Q3 2013",4),rep("Q4 2013",4),rep("Q1 2014",4),rep("Q2 2014",4),rep("Q3 2014",4)))
+```
+
+### Count of Tweets by Elon Musk Grouped by Topic
+
+```{r nvd3, echo = FALSE, results ='asis', warning = FALSE, fig.width = 10}
+n1 <- nPlot(count ~ quarter, group = "topic", data = tweets4, type = "multiBarChart")
+n1$xAxis(rotateLabels=-45)
+n1$chart(reduceXTicks = FALSE,stacked=TRUE)
+n1$print("chart3", include_assets=TRUE, cdn=TRUE)
+```
+
+### Background
+Elon Musk has been compared to Jobs, Edison, Ford, Tesla, and even Iron Man. Despite his resume already being quite impressive, many would argue his best work is yet to come: affordable self-driving electric cars, colony on Mars, and cheap and abundant solar power to name a few. 
+
+It would make sense that investing in him would yield high returns. The only problem is that it's not entirely clear how best to do this given his several irons in the fire:
+
+- CEO of Tesla Motors
+- CEO of SpaceX
+- Chairman of SolarCity
+- Invester in AI companies
+- And in his spare time, designer of a high-speed transportation system ("Hyperloop")
+
+He is a self-described workaholic and has said that some weeks he puts in 100 hours, but that still would not be enough to run three companies with market capitalizations in the billions. So which company (or companies) receives more of his time and energy? To answer this question I decided to look at his active twitter account to do an analysis on the content of his tweets over time.
+
+### Charting the Data
+To get the data I used the Twitter API (using Dev credentials) and the python script [tweet_dumper.py](https://gist.github.com/yanofsky/5436496) to pull all of Elon's tweets. I only used tweets and retweets (no replies or favorites). I then categorized them into "Tesla", "SpaceX", "SolarCity", and "Other". Most of his tweets and retweets are directly related to one of his three companies. Of the "Other" tweets, most are about climate change (which incidentally is a driving influence for his involvement in all three companies). To create the charts I used R with the following packages: rCharts, ggplot2, dplyr, lubridate, scales, and zoo. My R code can be found [here]().
+
+The chart created above is completely interactive. You can switch the bars on the chart from being stacked to being grouped. Click on a legend item to hide that particular grouping. Double-click on a legend item to select only that grouping. Mouseover one of the bars to get its count.
+
+A couple things that are apparent from the chart:
+
+- He rarely tweets about solar. This is somewhat surprising to me. I figured it would be less than the others since he isn't the CEO of SolarCity, but I didn't think it would be *that* much less. No doubt, Elon's involvement with SolarCity has played a large role in investors buying shares of SolarCity. Perhaps his involvement is less (or much less) than they realize?
+- He has been less active on twitter the past 15 months. During this same time the number of tweets relating to SpaceX outnumbers Tesla. Unfortunately, SpaceX is not a public company, so investing in it is not a viable option for most people.
+
+### Conclusion
+It would seem that investing in Tesla is currently the best route to capitalize on Elon Musk's future success. However, SpaceX may be a better long-term option once it goes public. Elon has also hinted that he would consider stepping aside from Tesla once he reaches his goal of mass-market electric cars. Full Disclosure: I own stock in both Tesla and SolarCity.
+
+Special thanks to Ramnath Vaidyanathan, Hadley Wickham, and Yihui Xie for their R packages, and to Novus Partners for NVD3.
+
+Just for fun, below is the static ggplot2 version of the same chart:
+
+```{r ggplot, echo = FALSE, results ='asis', warning = FALSE, fig.width = 10}
+ggplot(tweets3, aes(x = quarter, y = count, fill = topic)) + stat_summary(fun.y = identity, geom = "bar", position = "stack") + scale_fill_brewer(palette = "Set1") + scale_x_date(breaks = seq(as.Date("2012-03-01"),as.Date("2014-09-01"),by="3 months"), labels = date_format("%b-%y"), limits = as.Date(c("2012-02-01","2014-10-01"))) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + ggtitle("Tweets by Elon Musk Grouped by Topic")
+```
